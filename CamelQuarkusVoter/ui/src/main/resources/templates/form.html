@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <!-- CSS ... -->
+    <link rel="stylesheet" href="default.css">
+
+    <title>Favorite IDE</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>My Favorite IDE is:</h1>
+
+      <form action="{formurl}/favstackxform" method="POST" name="favstackForm" >
+        <p>
+          <select id="stacks" name="shortname">
+            <option value="">-- Please Select --</option>
+            <option value="intellij">IntelliJ</option>
+            <option value="vscode">VScode</option>
+            <option value="eclipse">Eclipse</option>
+            <option value="openshiftdevspaces">Openshift Dev Spaces</option>
+            <option value="vim">Vim</option>
+            <option value="other">Other</option>
+          </select>
+          <input type="submit" />
+        </p>
+      </form>
+    </div>
+  </body>
+</html>
