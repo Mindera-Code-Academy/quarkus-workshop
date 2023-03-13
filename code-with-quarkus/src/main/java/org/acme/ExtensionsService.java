@@ -1,6 +1,7 @@
 package org.acme;
 
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.GET;
@@ -11,6 +12,7 @@ import java.util.concurrent.CompletionStage;
 
 @Path("/extensions")
 @RegisterRestClient(configKey="extensions-api")
+
 public interface ExtensionsService {
     @GET
     Set<Extension> getById(@QueryParam("id") String id);

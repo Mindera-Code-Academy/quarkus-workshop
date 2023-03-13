@@ -15,7 +15,6 @@ public class ExtensionsResource {
     @RestClient
     ExtensionsService extensionsService;
 
-
     @GET
     @Path("/id/{id}")
     public Set<Extension> id(String id) {
@@ -25,6 +24,7 @@ public class ExtensionsResource {
     @GET
     @Path("/id-async/{id}")
     public CompletionStage<Set<Extension>> idAsync(String id) {
+
         return extensionsService.getByIdAsync(id);
     }
 
