@@ -16,7 +16,6 @@
     <module>subscription</module>
     <module>user</module>
     <module>common</module>
-
   </modules>
   <dependencies>
     <!-- tag::adocDependency[] -->

@@ -33,6 +33,7 @@
         <version.json-path>2.5.0</version.json-path>
         <maven.compiler.source>19</maven.compiler.source>
         <maven.compiler.target>19</maven.compiler.target>
+        <academy-mindera.version>1.0.0-SNAPSHOT</academy-mindera.version>
     </properties>
 
     <prerequisites>
@@ -74,6 +75,13 @@
                 <artifactId>json-path</artifactId>
                 <version>${version.json-path}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>academy.mindera.quarkus_aws</groupId>
+                <artifactId>microservices</artifactId>
+                <version>${academy-mindera.version}</version>
+                <type>pom</type>
+
             </dependency>
             <!-- end::adocSkip[] -->
         </dependencies>

@@ -9,7 +9,7 @@
   </parent>
   <groupId>academy.mindera.quarkus_aws.microservices</groupId>
   <artifactId>common</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>${academy-mindera.version}</version>
   <name>Quarkus :: Microservices :: Common</name>
 
   <build>
