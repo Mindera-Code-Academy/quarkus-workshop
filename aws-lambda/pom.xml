@@ -12,6 +12,7 @@
 
     <modules>
         <module>microservices</module>
+        <module>subscription_lambda</module>
     </modules>
     <properties>
         <!-- Quarkus -->
@@ -21,10 +22,10 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-        <quarkus.platform.version>3.0.0.CR1</quarkus.platform.version>
-        <quarkus-plugin.version>3.0.0.CR1</quarkus-plugin.version>
-        <software.amazon.awssdk.version>2.20.26</software.amazon.awssdk.version>
-        <io.quarkiverse.amazonservices.version>2.0.0.Alpha1</io.quarkiverse.amazonservices.version>
+        <quarkus.platform.version>2.16.6.Final</quarkus.platform.version>
+        <quarkus-plugin.version>2.16.6.Final</quarkus-plugin.version>
+        <software.amazon.awssdk.version>2.19.32</software.amazon.awssdk.version>
+        <io.quarkiverse.amazonservices.version>1.6.3</io.quarkiverse.amazonservices.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
         <!-- Other -->

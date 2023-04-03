@@ -1,16 +1,69 @@
 package academy.mindera.quarkus_aws.microservices.base.subscription;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
+
+
+import org.eclipse.microprofile.jwt.JsonWebToken;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 
 @Path("/api/subscriptions")
 public class SubscriptionResource {
 
+    @Inject
+    SubscriptionRepository subscriptionRepository;
+
+    @Inject
+    SecurityContext securityContext;
+
+    @Inject
+
+    JsonWebToken jwt;
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createSubscription(Subscription.SubscriptionDto subscriptionDto) throws URISyntaxException, UnsupportedEncodingException {
+        Subscription subscription;
+        securityContext.getUserPrincipal().getName();
+        try {
+            subscription = subscriptionRepository.save(subscriptionDto.toSubscription());
+            return Response.created(
+                            new URI("/api/subscriptions/user/" + URLEncoder.encode(subscription.getGSI2PK(), StandardCharsets.UTF_8))
+                    )
+                    .entity(subscription)
+                    .build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity("Subscription already exists")
+                    .build();
+        }
+    }
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
-        return "Hello from RESTEasy Reactive";
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getSubscriptions() {
+     return Response.ok()
+        .entity(subscriptionRepository.findAll())
+        .build();
+    }
+
+    @GET
+    @Path("/user/{userPK}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getSubscriptionByUserPK(String userPK) {
+        securityContext.getUserPrincipal().getName();
+        jwt.getClaimNames().forEach(
+                claimName -> System.out.println(claimName + " : " + jwt.getClaim(claimName))
+        );
+     return Response.ok()
+        .entity(subscriptionRepository.findByUserPk(userPK))
+        .build();
     }
 }

@@ -1,16 +1,18 @@
 package academy.mindera.quarkus_aws.microservices.common;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-@Path("/api/common")
+@Path("/")
 public class CommonResource {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
-        return "Hello from RESTEasy Reactive";
+    public String hello(
+            @QueryParam("idToken") String idToken
+    ) {
+        return idToken;
     }
 }
