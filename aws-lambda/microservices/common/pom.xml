@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>academy.mindera.quarkus_aws</groupId>
+    <artifactId>microservices</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <groupId>academy.mindera.quarkus_aws.microservices</groupId>
+  <artifactId>common</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>Quarkus :: Microservices :: Common</name>
+  <build>
+  <plugins>
+    <plugin>
+      <!-- Required as this common module contains CDI beans that will be inherited by quarkus service modules -->
+      <!-- https://quarkus.io/guides/cdi-reference#how-to-generate-a-jandex-index -->
+      <groupId>org.jboss.jandex</groupId>
+      <artifactId>jandex-maven-plugin</artifactId>
+      <version>1.2.3</version>
+      <executions>
+        <execution>
+          <id>make-index</id>
+          <goals>
+            <goal>jandex</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+  </plugins>
+</build>
+</project>
