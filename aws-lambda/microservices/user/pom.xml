@@ -12,4 +12,12 @@
   <version>1.0.0-SNAPSHOT</version>
   <name>Quarkus :: Microservices :: User</name>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 </project>
