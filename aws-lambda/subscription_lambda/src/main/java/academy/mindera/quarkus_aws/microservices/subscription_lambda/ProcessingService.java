@@ -21,6 +21,7 @@ public class ProcessingService {
             case "REMOVE" -> System.out.println("REMOVE");
             default -> System.out.println(eventName);
         }
+
     }
 
 }

@@ -7,6 +7,7 @@ import academy.mindera.quarkus_aws.microservices.common.dynamodb.EntityType;
 import academy.mindera.quarkus_aws.microservices.common.dynamodb.IDynamoDbObject;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
+import software.amazon.awssdk.services.dynamodb.endpoints.internal.Value;
 
 import java.time.Instant;
 import java.util.UUID;

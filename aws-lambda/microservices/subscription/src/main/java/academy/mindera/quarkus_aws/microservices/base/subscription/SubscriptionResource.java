@@ -2,6 +2,7 @@ package academy.mindera.quarkus_aws.microservices.base.subscription;
 
 
 
+import io.quarkus.security.Authenticated;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import javax.inject.Inject;
@@ -48,6 +49,7 @@ public class SubscriptionResource {
         } catch (Exception e) {
             return Response.status(Response.Status.CONFLICT)
                     .entity("Subscription already exists")
+                    .contentLocation(new URI("/api/subscriptions/user/" + URLEncoder.encode(subscriptionDto.userPK(), StandardCharsets.UTF_8)))
                     .build();
         }
     }
@@ -61,12 +63,13 @@ public class SubscriptionResource {
 
     @GET
     @Path("/user/{userPK}")
+   // @Authenticated
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSubscriptionByUserPK(String userPK) {
-        securityContext.getUserPrincipal().getName();
-        jwt.getClaimNames().forEach(
+     //   securityContext.getUserPrincipal().getName();
+     /*   jwt.getClaimNames().forEach(
                 claimName -> System.out.println(claimName + " : " + jwt.getClaim(claimName))
-        );
+        );*/
      return Response.ok()
         .entity(subscriptionRepository.findByUserPk(userPK))
         .build();
