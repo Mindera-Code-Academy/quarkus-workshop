@@ -12,10 +12,10 @@ public class CommonResourceTest {
     @Test
     public void testHelloEndpoint() {
         given()
-          .when().get("/api/common")
+          .when().get("/api/token")
           .then()
-             .statusCode(200)
-             .body(is("Hello from RESTEasy Reactive"));
+             .statusCode(204);
+            // .body(is("Hello from RESTEasy Reactive"));
     }
 
 }

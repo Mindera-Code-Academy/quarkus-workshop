@@ -26,13 +26,18 @@ public class SubscriptionResource {
     SecurityContext securityContext;
 
     @Inject
-
     JsonWebToken jwt;
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Response createSubscription(Subscription.SubscriptionDto subscriptionDto) throws URISyntaxException, UnsupportedEncodingException {
         Subscription subscription;
-        securityContext.getUserPrincipal().getName();
+
+        if(!subscriptionDto.userPK().contains(jwt.getClaim("sub"))) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("You can only create subscriptions for yourself")
+                    .build();
+        }
+
         try {
             subscription = subscriptionRepository.save(subscriptionDto.toSubscription());
             return Response.created(

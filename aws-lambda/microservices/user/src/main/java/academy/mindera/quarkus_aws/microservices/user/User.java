@@ -34,6 +34,19 @@ public class User extends DynamoDbObject implements IDynamoDbObject {
         this.email = email;
     }
 
+    public User(String email, String UUID)
+     {
+
+        PK = EntityType.USER.prefixPK() + UUID;
+        SK = EntityType.USER.prefixSK() + email;
+        GSI1PK = EntityType.USER.prefixPK();
+        GSI1SK = EntityType.USER.prefixSK() + email;
+        GSI2PK = EntityType.USER.prefixPK();
+        GSI2SK = EntityType.USER.prefixSK() + Instant.now().atZone(java.time.ZoneId.of("UTC")).toInstant().toEpochMilli();
+        entityType = EntityType.USER;
+        this.email = email;
+    }
+
     public User(
             String PK,
             String SK,
@@ -55,6 +68,11 @@ public class User extends DynamoDbObject implements IDynamoDbObject {
 
     }
 
+    public record UserCreateDto(String email, String UUID){
+        public User toUser() {
+            return new User(email, UUID);
+        }
+    }
 
 
     @DynamoDbPartitionKey

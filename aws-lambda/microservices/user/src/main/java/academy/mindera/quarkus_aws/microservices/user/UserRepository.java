@@ -25,8 +25,8 @@ public class UserRepository {
         userDynamoDynamoDbGenericRepository = new DynamoDbGenericRepository<>(enhancedClient, User.class);
     }
 
-    public void save(User user) {
-        userDynamoDynamoDbGenericRepository.create(user);
+    public User save(User user) {
+      return userDynamoDynamoDbGenericRepository.create(user);
     }
 
     public void saveAll(List<User> users) {
