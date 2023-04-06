@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: CloudFormation template to create a Step Functions state machine for a simple workflow that calls an HTTP endpoint
+
+Resources:
+
+  HttpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs14.x
+      InlineCode: |
+        exports.handler = async (event) => {
+          const https = require('https');
+          const url = 'https://api.ipify.org?format=json';
+          return new Promise((resolve, reject) => {
+            https.get(url, (res) => {
+              let body = '';
+              res.on('data', (chunk) => {
+                body += chunk;
+              });
+              res.on('end', () => {
+                try {
+                  body = JSON.parse(body);
+                  resolve(body);
+                } catch (error) {
+                  reject(error);
+                }
+              });
+            }).on('error', (error) => {
+              reject(error);
+            });
+          });
+        };
+
+      Description: Lambda function to make an HTTP request
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Timeout: 10
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            ApiId: !Ref HttpApi
+
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: dev
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - X-Amz-Date
+          - Authorization
+          - X-Api-Key
+          - X-Amz-Security-Token
+          - X-Amz-User-Agent
+        AllowOrigins:
+          - '*'
+
+
+
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
+
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: SimpleHttpWorkflow
+      DefinitionString: !Sub |
+        {
+          "StartAt": "CallHttpEndpoint",
+          "States": {
+            "CallHttpEndpoint": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${HttpFunction.Arn}",
+                "Payload": {
+                  "method": "GET",
+                  "url": "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/dev"
+                }
+              },
+              "Next": "EvaluateHttpResponse"
+            },
+            "EvaluateHttpResponse": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.Payload.statusCode",
+                  "NumericEquals": 200,
+                  "Next": "SendSnsNotification"
+                }
+              ],
+              "Default": "SkipSnsNotification"
+            },
+            "SendSnsNotification": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "TopicArn": "${SnsTopic.TopicArn}",
+                "Message": "HTTP request was successful."
+              },
+              "End": true
+            },
+            "SkipSnsNotification": {
+              "Type": "Pass",
+              "Result": "No SNS notification was sent.",
+              "End": true
+            }
+          }
+        }
+      RoleArn: !GetAtt StateMachineRole.Arn
+
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: SimpleHttpWorkflowTopic
+

@@ -252,12 +252,12 @@
                 <skipITs>false</skipITs>
                 <quarkus.package.type>native</quarkus.package.type>
             </properties>
-            <!--  <dependencies>
+             <dependencies>
               <dependency>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-amazon-lambda-rest</artifactId>
               </dependency>
-            </dependencies> -->
+            </dependencies>
         </profile>
     </profiles>
 </project>

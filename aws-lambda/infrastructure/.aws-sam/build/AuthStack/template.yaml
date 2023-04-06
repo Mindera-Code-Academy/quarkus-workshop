@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Cognito resources
+Parameters:
+  pCognitoUserPoolName:
+    Type: String
+    Description: Name of the Cognito User Pool
+    Default: mindera-user-pool
+  pCognitoUserPoolClientName:
+    Type: String
+    Description: Name of the Cognito User Pool Client
+    Default: mindera-user-pool-client
+  pCognitoUserPoolDomain:
+    Type: String
+    Description: Domain of the Cognito User Pool
+    Default: auth.code.mindera.academy
+  gEnvironment:
+    Type: String
+    Description: The environment name
+    AllowedValues:
+    - dev
+    - prod
+    Default: dev
+Resources:
+  rCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+        InviteMessageTemplate:
+          EmailSubject:
+            Fn::Sub: '${AWS::StackName}: temporary password'
+          EmailMessage: Your username is {username} and temporary password is {####}.
+          SMSMessage: Your username is {username} and temporary password is {####}.
+      AliasAttributes:
+      - email
+      AutoVerifiedAttributes:
+      - email
+      UserPoolName:
+        Fn::Sub: ${AWS::StackName}-${pCognitoUserPoolName}
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          TemporaryPasswordValidityDays: 7
+  rCognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      UserPoolId:
+        Ref: rCognitoUserPool
+      Domain:
+        Fn::Select:
+        - 2
+        - Fn::Split:
+          - /
+          - Ref: AWS::StackId
+  rCognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AllowedOAuthFlows:
+      - code
+      - implicit
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+      - email
+      - openid
+      - profile
+      - aws.cognito.signin.user.admin
+      CallbackURLs:
+      - http://localhost:8080
+      ExplicitAuthFlows:
+      - ALLOW_CUSTOM_AUTH
+      - ALLOW_USER_PASSWORD_AUTH
+      - ALLOW_ADMIN_USER_PASSWORD_AUTH
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      LogoutURLs:
+      - http://localhost
+      SupportedIdentityProviders:
+      - COGNITO
+      UserPoolId:
+        Ref: rCognitoUserPool
+Outputs:
+  oCognitoUserPool:
+    Description: Cognito User Pool
+    Value:
+      Ref: rCognitoUserPool
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CognitoUserPool
+  oCognitoUserPoolArn:
+    Description: Cognito User Pool ARN
+    Value:
+      Fn::GetAtt:
+      - rCognitoUserPool
+      - Arn
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CognitoUserPoolArn
+  oCognitoUserPoolClient:
+    Description: Cognito User Pool Client
+    Value:
+      Ref: rCognitoUserPoolClient
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CognitoUserPoolClient

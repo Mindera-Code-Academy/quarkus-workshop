@@ -17,7 +17,7 @@
     <properties>
         <!-- Quarkus -->
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
-        <maven.compiler.release>19</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
@@ -32,8 +32,8 @@
         <version.datafaker>1.7.0</version.datafaker>
         <testcontainers.version>1.15.3</testcontainers.version>
         <version.json-path>2.5.0</version.json-path>
-        <maven.compiler.source>19</maven.compiler.source>
-        <maven.compiler.target>19</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <academy-mindera.version>1.0.0-SNAPSHOT</academy-mindera.version>
     </properties>
 

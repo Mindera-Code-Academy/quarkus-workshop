@@ -1,0 +1,193 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Users service
+
+Parameters:
+
+  GeneralDomain:
+    Type: String
+    MinLength: 3
+    MaxLength: 63
+    #AllowedPattern: ^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$
+    Description: Enter a string. Must be alpha numeric 3-63 in length.
+    Default: "minka.cloud" #"minka.tech" #
+  Environment:
+    Type: String
+    Description: The environment name
+    Default: "dev"
+  DynamoDBTable:
+    Type: String
+    Default: "quarkus-stack-dev"
+
+  UserPoolArn:
+    Type: String
+    Description: The user pool arn
+    Default: "arn:aws:cognito-idp:eu-west-1:123456789:userpool/eu-west-1_123456789"
+  pCognitoUrl:
+    Type: String
+    Description: The user pool arn
+Conditions:
+  IsProd: !Equals [ !Ref Environment, "prod" ]
+
+Resources:
+  ModelsAPILambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Environment}-users-native
+      Handler: not.used.in.provided.runtime
+      Runtime: provided.al2
+      CodeUri: ../microservices/user/target/function.zip
+      #Bucket: minka-cloud-dev-deployment
+      #Key: !Ref WelcomeFilePath
+      MemorySize: !If [ IsProd, 256, 128 ]
+      Architectures:
+        - arm64
+      Timeout: 15
+      Role: !GetAtt UsersExecutionRole.Arn
+      Tracing: Active
+      Environment:
+        Variables:
+          DISABLE_SIGNAL_HANDLERS: true
+          TABLE_NAME: !Ref DynamoDBTable
+          COGNITO_URL: !Ref pCognitoUrl
+      Events:
+        GetUsersInfo:
+          Type: Api
+          Properties:
+            Path: /{+proxy}
+            Method: any
+            RestApiId: !Ref UsersApi
+      Tags:
+        Environment: !Ref Environment
+        Service: "users"
+        Type: "lambda"
+        Name: "users"
+
+
+
+  LogGroupUsersAPILambda:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${Environment}-users-native
+      RetentionInDays: 7
+
+  UsersApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+
+      Name: !Sub ${Environment}-users-api
+      EndpointConfiguration: REGIONAL
+      BinaryMediaTypes:
+        - "*/*"
+     # Auth:
+     #   DefaultAuthorizer: CognitoAuthorizer
+     #   Authorizers:
+     #     CognitoAuthorizer:
+     #       UserPoolArn: !Ref UserPoolArn
+      Cors:
+        AllowOrigin: "'*'"
+        AllowMethods: "'GET, POST, PUT, OPTIONS'"
+        AllowHeaders: "'X-Custom,Content-Type,Accept,Origin,Access-Control-Request-Method,Access-Control-Request-Headers,Access-Control-Allow-Origin,Access-Control-Allow-Credentials,Access-Control-Allow-Headers,Access-Control-Allow-Methods,x-amzn-trace-id,x-amz-date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowCredentials: "'true'"
+        MaxAge: "'86400'"
+
+
+
+
+  #UsersAPIMapping:
+  #  Type: AWS::ApiGateway::BasePathMapping
+  #  DependsOn: UsersApi
+  #  Properties:
+  #    BasePath: users
+  #    DomainName: !If
+  #      - IsProd
+  #      - !Sub api.${GeneralDomain}
+  #      - !Sub ${Environment}-api.${GeneralDomain}
+  #    RestApiId: !Ref UsersApi
+  #    Stage: !Ref Environment
+
+
+  UsersExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${Environment}-users-execution-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                  - cloudwatch:ListMetrics
+                  - cloudwatch:PutMetricAlarm
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cognito-idp:*
+                Resource: !Sub "*"
+              - Effect: Allow
+                Action:
+                  - sns:*
+                Resource: !Sub "*"
+              - Effect: Allow
+                Action:
+                  - sqs:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ses:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: !Sub "*"
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: !Sub "*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:CreateTable
+                  - dynamodb:DescribeTable
+                  - dynamodb:ListTables
+                  - dynamodb:UpdateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:DescribeTimeToLive
+                  - dynamodb:UpdateTimeToLive
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*"
+Outputs:
+  UsersApiNativeApi:
+    Description: URL for application
+    Value: !Sub 'https://${UsersApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
+    Export:
+      Name: UsersApiNativeApi
+
+
+

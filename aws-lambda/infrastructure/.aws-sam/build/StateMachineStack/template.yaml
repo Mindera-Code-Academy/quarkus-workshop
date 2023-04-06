@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CloudFormation template to create a Step Functions state machine for
+  a simple workflow that calls an HTTP endpoint
+Resources:
+  HttpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs14.x
+      InlineCode: "exports.handler = async (event) => {\n  const https = require('https');\n\
+        \  const url = 'https://api.ipify.org?format=json';\n  return new Promise((resolve,\
+        \ reject) => {\n    https.get(url, (res) => {\n      let body = '';\n    \
+        \  res.on('data', (chunk) => {\n        body += chunk;\n      });\n      res.on('end',\
+        \ () => {\n        try {\n          body = JSON.parse(body);\n          resolve(body);\n\
+        \        } catch (error) {\n          reject(error);\n        }\n      });\n\
+        \    }).on('error', (error) => {\n      reject(error);\n    });\n  });\n};\n"
+      Description: Lambda function to make an HTTP request
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      Timeout: 10
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            ApiId:
+              Ref: HttpApi
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: dev
+      CorsConfiguration:
+        AllowMethods:
+        - GET
+        - OPTIONS
+        AllowHeaders:
+        - Content-Type
+        - X-Amz-Date
+        - Authorization
+        - X-Api-Key
+        - X-Amz-Security-Token
+        - X-Amz-User-Agent
+        AllowOrigins:
+        - '*'
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - states.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: LambdaInvokePolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource:
+              Fn::Sub: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: SimpleHttpWorkflow
+      DefinitionString:
+        Fn::Sub: "{\n  \"StartAt\": \"CallHttpEndpoint\",\n  \"States\": {\n    \"\
+          CallHttpEndpoint\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"\
+          arn:aws:states:::lambda:invoke\",\n      \"Parameters\": {\n        \"FunctionName\"\
+          : \"${HttpFunction.Arn}\",\n        \"Payload\": {\n          \"method\"\
+          : \"GET\",\n          \"url\": \"https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/dev\"\
+          \n        }\n      },\n      \"Next\": \"EvaluateHttpResponse\"\n    },\n\
+          \    \"EvaluateHttpResponse\": {\n      \"Type\": \"Choice\",\n      \"\
+          Choices\": [\n        {\n          \"Variable\": \"$.Payload.statusCode\"\
+          ,\n          \"NumericEquals\": 200,\n          \"Next\": \"SendSnsNotification\"\
+          \n        }\n      ],\n      \"Default\": \"SkipSnsNotification\"\n    },\n\
+          \    \"SendSnsNotification\": {\n      \"Type\": \"Task\",\n      \"Resource\"\
+          : \"arn:aws:states:::sns:publish\",\n      \"Parameters\": {\n        \"\
+          TopicArn\": \"${SnsTopic.TopicArn}\",\n        \"Message\": \"HTTP request\
+          \ was successful.\"\n      },\n      \"End\": true\n    },\n    \"SkipSnsNotification\"\
+          : {\n      \"Type\": \"Pass\",\n      \"Result\": \"No SNS notification\
+          \ was sent.\",\n      \"End\": true\n    }\n  }\n}\n"
+      RoleArn:
+        Fn::GetAtt:
+        - StateMachineRole
+        - Arn
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: SimpleHttpWorkflowTopic

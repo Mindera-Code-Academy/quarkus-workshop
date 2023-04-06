@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CloudFormation template to create a DynamoDB table with global secondary
+  indexes and TTL.
+Parameters:
+  pTableName:
+    Type: String
+    Description: Name of the DynamoDB table to create.
+    MinLength: 3
+    MaxLength: 255
+    Default: quarkus-stack-dev
+Resources:
+  SingleTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: PK
+        AttributeType: S
+      - AttributeName: SK
+        AttributeType: S
+      - AttributeName: GSIPK
+        AttributeType: S
+      - AttributeName: GSISK
+        AttributeType: S
+      - AttributeName: GSIPK1
+        AttributeType: S
+      - AttributeName: GSISK1
+        AttributeType: S
+      - AttributeName: GSIPK2
+        AttributeType: S
+      - AttributeName: GSISK2
+        AttributeType: S
+      KeySchema:
+      - AttributeName: PK
+        KeyType: HASH
+      - AttributeName: SK
+        KeyType: RANGE
+      GlobalSecondaryIndexes:
+      - IndexName: GSIPK_GSISK
+        KeySchema:
+        - AttributeName: GSIPK
+          KeyType: HASH
+        - AttributeName: GSISK
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: GSIPK1_GSISK1
+        KeySchema:
+        - AttributeName: GSIPK1
+          KeyType: HASH
+        - AttributeName: GSISK1
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: GSIPK2_GSISK2
+        KeySchema:
+        - AttributeName: GSIPK2
+          KeyType: HASH
+        - AttributeName: GSISK2
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      TableName:
+        Ref: pTableName
+      BillingMode: PAY_PER_REQUEST
+      TimeToLiveSpecification:
+        AttributeName: TTL
+        Enabled: true

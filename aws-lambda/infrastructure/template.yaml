@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  Serverless pattern - API Gateway private REST API to private resource using VPC link.
+  This pattern shows how to add Cognito authentication to private resources using API Gateway private REST API and VPC link.
+Parameters:
+  pHostedZoneName:
+    Type: String
+    Description: The name of the hosted zone to create the record in.
+    Default: "code.mindera.academy"
+  pHostedZoneId:
+    Type: String
+    Description: The ID of the hosted zone to create the record in.
+    Default: "Z0748441HW3NKA1CZWBX"
+  pTableName:
+    Type: String
+    Description: Name of the DynamoDB table to create.
+    MinLength: 3
+    MaxLength: 255
+    Default: "quarkus-stack"
+  pEnvironment:
+    Type: String
+    Description: The environment name
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+Resources:
+  AuthStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: auth.yaml
+      Parameters:
+        gEnvironment: !Ref pEnvironment
+
+  DynamoDBStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: db.yaml
+      Parameters:
+        pTableName: !Sub ${pTableName}-${pEnvironment}
+
+  StateMachineStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: step.yaml
+      #Parameters:
+      #  pTableName: !Sub ${pTableName}-${pEnvironment}
+      #  pEnvironment: !Ref pEnvironment
+
+  UserStack:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: user.yaml
+      Parameters:
+        pTableName: !Sub ${pTableName}-${pEnvironment}
+        pEnvironment: !Ref pEnvironment
+        pCognitoUserArn: !GetAtt AuthStack.Outputs.oCognitoUserPoolArn
+        pCognitoUrl: !GetAtt AuthStack.Outputs.oCognitoUrl
+
